@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0C0A09">
+  <title>⚓ Coby — The Deck</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚓</text></svg>">
+  <link rel="stylesheet" href="/css/logbook.css">
+</head>
+<body>
+
+  <header class="logbook-header">
+    <span class="logbook-logo">⚓ coby</span>
+    <span></span>
+  </header>
+
+  <main class="logbook">
+
+    <div class="greeting">
+      <div class="greeting-text" id="greetingText"></div>
+      <div class="greeting-sub" id="greetingSub"></div>
+    </div>
+
+    <div class="section-rule" data-phase="main"><span>CHAPTERS</span></div>
+
+    <div class="chapter-index" id="chapters">
+      <a href="/training.html" class="chapter-row">
+        <span class="ch-num">01</span>
+        <span class="ch-title">Today's Log</span>
+        <span class="ch-stat" id="ch-training"></span>
+      </a>
+      <a href="/voyage.html" class="chapter-row">
+        <span class="ch-num">02</span>
+        <span class="ch-title">The Voyage</span>
+        <span class="ch-stat">8 Freedoms</span>
+      </a>
+      <a href="/treasury.html" class="chapter-row">
+        <span class="ch-num">03</span>
+        <span class="ch-title">Treasury</span>
+        <span class="ch-stat" id="ch-treasury"></span>
+      </a>
+      <a href="/quests.html" class="chapter-row">
+        <span class="ch-num">04</span>
+        <span class="ch-title">Quest Board</span>
+        <span class="ch-stat" id="ch-quests"></span>
+      </a>
+      <a href="/armory.html" class="chapter-row">
+        <span class="ch-num">05</span>
+        <span class="ch-title">The Armory</span>
+        <span class="ch-stat">40 machines</span>
+      </a>
+      <a href="/library.html" class="chapter-row">
+        <span class="ch-num">06</span>
+        <span class="ch-title">Library</span>
+        <span class="ch-stat">3 complete</span>
+      </a>
+    </div>
+
+    <div class="quote" style="margin-top:80px">
+      <p class="quote-text">"Going my own way now."</p>
+      <p class="quote-attr">— COBY · Born March 29, 2026</p>
+    </div>
+
+  </main>
+
+  <nav class="bottom-nav">
+    <div class="bottom-nav-items">
+      <a href="/" class="bottom-nav-item active"><span class="nav-icon">⚓</span><span>deck</span></a>
+      <a href="/voyage.html" class="bottom-nav-item"><span class="nav-icon">🧭</span><span>voyage</span></a>
+      <a href="/training.html" class="bottom-nav-item"><span class="nav-icon">💪</span><span>training</span></a>
+      <a href="/quests.html" class="bottom-nav-item"><span class="nav-icon">📋</span><span>quests</span></a>
+      <a href="/library.html" class="bottom-nav-item"><span class="nav-icon">🔍</span><span>intel</span></a>
+    </div>
+  </nav>
+
+<script>
+const DAYS_MAP = {
+  monday: 'Push Day', tuesday: 'Pull Day', wednesday: 'Leg Day',
+  thursday: 'Core + Functional', friday: 'Upper Day', saturday: 'Lower Day', sunday: 'Rest Day'
+};
+const DAYS = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+const today = DAYS[new Date().getDay()];
+
+// Greeting
+const hour = new Date().getHours();
+const timeOfDay = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
+document.getElementById('greetingText').textContent = timeOfDay + ', Luffy.';
+
+const dayStart = new Date(2026, 2, 29);
+const dayCount = Math.floor((new Date() - dayStart) / 86400000);
+const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+document.getElementById('greetingSub').textContent = 'Day ' + dayCount + ' of the voyage.';
+
+// Today's training
+document.getElementById('ch-training').textContent = DAYS_MAP[today] || 'Rest';
+</script>
+
+</body>
+</html>

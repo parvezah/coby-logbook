@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0C0A09">
+  <title>💪 Coby — Training</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚓</text></svg>">
+  <link rel="stylesheet" href="/css/logbook.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="logbook-header">
+    <a href="/" class="logbook-logo">⚓ coby</a>
+    <button class="logbook-menu-btn" onclick="toggleMenu()" aria-label="Menu">≡</button>
+  </header>
+
+  <!-- Chapter Menu -->
+  <div class="chapter-menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+  <nav class="chapter-menu" id="chapterMenu">
+    <div class="chapter-menu-title">Chapters</div>
+    <a href="/" class="chapter-link"><span class="ch-num">01</span> The Deck</a>
+    <a href="/training.html" class="chapter-link active"><span class="ch-num">02</span> Today's Log</a>
+    <a href="/voyage.html" class="chapter-link"><span class="ch-num">03</span> The Voyage</a>
+    <a href="/treasury.html" class="chapter-link"><span class="ch-num">04</span> Treasury</a>
+    <a href="/quests.html" class="chapter-link"><span class="ch-num">05</span> Quest Board</a>
+    <a href="/armory.html" class="chapter-link"><span class="ch-num">06</span> Armory</a>
+    <a href="/library.html" class="chapter-link"><span class="ch-num">07</span> Library</a>
+  </nav>
+
+  <!-- Session Progress Bar -->
+  <div class="session-bar hidden" id="sessionBar">
+    <div class="session-bar-inner">
+      <div class="session-bar-fill" id="sessionFill" style="width:0%"></div>
+    </div>
+    <div class="session-stats" id="sessionStats"></div>
+  </div>
+
+  <main class="logbook">
+
+    <!-- Greeting -->
+    <div class="greeting">
+      <div class="greeting-text" id="greetingText"></div>
+      <div class="greeting-sub" id="greetingSub"></div>
+    </div>
+
+    <!-- Split Header -->
+    <div class="split-header">
+      <h1 class="split-title" id="splitTitle"></h1>
+      <p class="split-subtitle" id="splitSubtitle"></p>
+    </div>
+
+    <!-- Warm-up -->
+    <div id="warmupSection">
+      <button class="warmup-toggle" id="warmupToggle">
+        <span>▸ Warm-up</span>
+        <span class="arrow">▼</span>
+      </button>
+      <div class="warmup-content" id="warmupContent"></div>
+    </div>
+
+    <!-- Exercise Entries -->
+    <div id="entries"></div>
+
+    <!-- Rayleigh Quote -->
+    <div class="quote" id="quote"></div>
+
+  </main>
+
+  <!-- Timer Overlay -->
+  <div class="timer-overlay" id="timerOverlay" onclick="dismissTimer(event)">
+    <div class="timer-display" id="timerDisplay">90</div>
+    <div class="timer-exercise" id="timerExercise"></div>
+    <button class="timer-cancel" onclick="cancelTimer()">Dismiss</button>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-items">
+      <a href="/" class="bottom-nav-item"><span class="nav-icon">⚓</span><span>deck</span></a>
+      <a href="/voyage.html" class="bottom-nav-item"><span class="nav-icon">🧭</span><span>voyage</span></a>
+      <a href="/training.html" class="bottom-nav-item active"><span class="nav-icon">💪</span><span>training</span></a>
+      <a href="/quests.html" class="bottom-nav-item"><span class="nav-icon">📋</span><span>quests</span></a>
+      <a href="/library.html" class="bottom-nav-item"><span class="nav-icon">🔍</span><span>intel</span></a>
+    </div>
+  </nav>
+
+<script>
+// ═══════════════════════════════════════════
+// THE CAPTAIN'S LOGBOOK — Training Logic
+// ═══════════════════════════════════════════
+
+const SIGNAL_URL = 'sgnl://signal.me/#p/+919663963235';
+const DAYS = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+const today = DAYS[new Date().getDay()];
+
+const QUOTES = {
+  monday: "Chest and shoulders set the frame. Control the negative — that's where growth hides.",
+  tuesday: "Your back is the canvas. Paint it wide. Squeeze at the top, every rep.",
+  wednesday: "Legs carry everything. No one ever regretted going heavy on leg day.",
+  thursday: "A strong core is a strong foundation. Move well before you move heavy.",
+  friday: "Upper day is about balance. Push and pull in equal measure.",
+  saturday: "Listen to your body. Hit what needs work, skip what needs rest.",
+  sunday: "Recovery is when you grow. Eat, sleep, and let the work settle in."
+};
+
+const PROGRAMS = {
+  monday: {
+    title: 'PUSH DAY', subtitle: 'Chest · Shoulders · Triceps', split: 'push',
+    warmup: [
+      { name:'Treadmill Walk', equipment:'Treadmill', duration:'5 min', video:'https://www.youtube.com/watch?v=-afM1L4v2a4' },
+      { name:'Chest & Shoulder Stretches', equipment:'Bodyweight', duration:'2 min', video:'https://www.youtube.com/watch?v=uodkIIcXtRk' },
+    ],
+    main: [
+      { name:'Super Horizontal Multi Press', equipment:'Panatta 1FW042', muscles:'Chest, Front Delts, Triceps', sets:4, reps:'6-8', rest:90, video:'https://www.youtube.com/watch?v=3aKDR395D6M', reel:'https://www.instagram.com/reel/DTneJ7nDkbo/' },
+      { name:'Super Inclined Bench Press', equipment:'Panatta 1FW', muscles:'Upper Chest, Front Delts', sets:3, reps:'8-10', rest:90, video:'https://www.youtube.com/watch?v=s2n2gUrXfq8', reel:'https://www.instagram.com/reel/DTneJ7nDkbo/' },
+      { name:'Super Deltoid Press', equipment:'Panatta 1FW', muscles:'Anterior & Lateral Delts', sets:3, reps:'10-12', rest:60, video:'https://www.youtube.com/watch?v=pIpA6XWb2x0', reel:'https://www.instagram.com/reel/DSXwIuajuhU/' },
+      { name:'Super Middle Chest Flight', equipment:'Panatta 1FW043', muscles:'Mid Chest', sets:3, reps:'12-15', rest:60, video:'https://www.youtube.com/watch?v=QENKPHhQVi4', reel:'https://www.instagram.com/reel/DV_NFFxCUJr/' },
+      { name:'Super Tricep Cable Station', equipment:'Cable Station', muscles:'Triceps', sets:3, reps:'12-15', rest:60, video:'https://www.youtube.com/watch?v=2-LAMcpzODU', reel:'https://www.instagram.com/reel/DU_h4gKiDUu/' },
+      { name:'Standing Total Arms Pushdown', equipment:'Panatta 1FE055', muscles:'Triceps Long Head', sets:3, reps:'12-15', rest:60, video:'https://www.youtube.com/watch?v=YDC0XXWGvio', reel:'https://www.instagram.com/p/DUG5UKLiITq/' },
+    ],
+    core: [
+      { name:'Dead Bugs', equipment:'Mat', duration:'3 × 10/side', video:'https://www.youtube.com/watch?v=I9x8KzS_jKw' },
+    ],
+    stretches: [
+      { name:'Chest Doorway Stretch', duration:'30s each side' },
+      { name:'Shoulder Cross-Body Stretch', duration:'30s each' },
+      { name:'Tricep Overhead Stretch', duration:'30s each' },
+    ],
+    cardio: [
+      { name:'Stairmaster', duration:'15 min zone 2', video:'https://www.youtube.com/watch?v=VTsBi-g1K0I' },
+    ]
+  },
+  tuesday: {
+    title: 'PULL DAY', subtitle: 'Back · Biceps · Rear Delts', split: 'pull',
+    warmup: [
+      { name:'Treadmill Walk', equipment:'Treadmill', duration:'5 min', video:'https://www.youtube.com/watch?v=-afM1L4v2a4' },
+      { name:'Lat & Back Stretches', equipment:'Bodyweight', duration:'2 min', video:'https://www.youtube.com/watch?v=HMvZeh_J8ms' },
+    ],
+    main: [
+      { name:'Super Lat Pulldown Circular', equipment:'Panatta 1FW101', muscles:'Lats, Teres Major', sets:4, reps:'8-10', rest:90, video:'https://www.youtube.com/watch?v=CQr66UrFa3I', reel:'https://www.instagram.com/reel/DFl0Oksg9EI/' },
+      { name:'Super High Row', equipment:'Panatta 1FW003', muscles:'Upper Back, Rhomboids', sets:3, reps:'8-10', rest:90, video:'https://www.youtube.com/watch?v=tllmmSQ4Seo', reel:'https://www.instagram.com/reel/DQZHLlbDzX8/' },
+      { name:'T-Bar Row', equipment:'Panatta 1FW007', muscles:'Mid Back, Lats', sets:3, reps:'8-10', rest:90, video:'https://www.youtube.com/watch?v=1J7IGks0mz8', reel:'https://www.instagram.com/reel/DTlmgZlkrwr/' },
+      { name:'Peck Back / Rear Delt', equipment:'Panatta 1FE117', muscles:'Rear Delts', sets:3, reps:'12-15', rest:60, video:'https://www.youtube.com/watch?v=y9NjJYEqkew', reel:'https://www.instagram.com/reel/DEBC-2SzClJ/' },
+      { name:'Dumbbell Bicep Curls', equipment:'Dumbbells', muscles:'Biceps', sets:3, reps:'10-12', rest:60, video:'https://www.youtube.com/watch?v=GNO4OtYoCYk', reel:'https://www.instagram.com/reel/DIG_0-gu6JQ/' },
+      { name:'Dumbbell Hammer Curls', equipment:'Dumbbells', muscles:'Brachialis, Forearms', sets:3, reps:'10-12', rest:60, video:'https://www.youtube.com/watch?v=zC3nLlEvin4', reel:'https://www.instagram.com/reel/DR3ahdfDFUK/' },
+    ],
+    core: [
+      { name:'Pallof Press', equipment:'Cable', duration:'3 × 12/side', video:'https://www.youtube.com/watch?v=AH_QZLm_0-s' },
+    ],
+    stretches: [
+      { name:'Lat Stretch', duration:'30s each side' },
+      { name:'Bicep Wall Stretch', duration:'30s each' },
+      { name:'Child\'s Pose', duration:'30s' },
+    ],
+    cardio: [
+      { name:'Stairmaster', duration:'15 min zone 2', video:'https://www.youtube.com/watch?v=VTsBi-g1K0I' },
+    ]
+  },
+  wednesday: {
+    title: 'LEG DAY', subtitle: 'Quads · Hamstrings · Glutes · Calves', split: 'legs',
+    warmup: [
+      { name:'Treadmill Walk (Incline 6)', equipment:'Treadmill', duration:'5 min' },
+      { name:'Leg Swings & Hip Circles', equipment:'Bodyweight', duration:'2 min' },
+    ],
+    main: [
+      { name:'Super Leg Press 45°', equipment:'Panatta 1FW090', muscles:'Quads, Glutes', sets:4, reps:'10-12', rest:90, video:'https://www.youtube.com/watch?v=IZxyjW7MPJQ', reel:'https://www.instagram.com/reel/C_BOnInJMjY/' },
+      { name:'Hack Squat', equipment:'Panatta 1FW', muscles:'Quads, Glutes', sets:3, reps:'10-12', rest:90, video:'https://www.youtube.com/watch?v=Zg4Ohr2yLxU', reel:'https://www.instagram.com/reel/DTf4bnkknAv/' },
+      { name:'Booty Builder Hip Thrust', equipment:'Booty Builder', muscles:'Glutes', sets:3, reps:'10-12', rest:90, video:'https://www.youtube.com/watch?v=SEdqd1n0cvg', reel:'https://www.instagram.com/reel/C4MBXjRyl8K/' },
+      { name:'Booty Builder Leg Curl', equipment:'Booty Builder', muscles:'Hamstrings', sets:3, reps:'12-15', rest:60, video:'https://www.youtube.com/watch?v=1Tq3QdYUuHs', reel:'https://www.instagram.com/reel/DOHA5DTDDj2/' },
+      { name:'Donkey Calf', equipment:'Panatta 1FW089', muscles:'Gastrocnemius', sets:3, reps:'15-20', rest:60, video:'https://www.youtube.com/watch?v=0OV6U0XajWY', reel:'https://www.instagram.com/reel/DCX7vYgP_WZ/' },
+      { name:'Super Seated Calf', equipment:'Panatta 1FW086', muscles:'Soleus', sets:3, reps:'15-20', rest:60, video:'https://www.youtube.com/watch?v=EkODfstJO08', reel:'' },
+    ],
+    core: [
+      { name:'McGill Big 3', equipment:'Mat', duration:'10 each', video:'https://www.youtube.com/watch?v=2_e4I-brfqs' },
+    ],
+    stretches: [
+      { name:'Hip Flexor Stretch', duration:'30s each side' },
+      { name:'Quad Stretch', duration:'30s each' },
+      { name:'Hamstring Stretch', duration:'30s each' },
+    ],
+    cardio: [
+      { name:'Stairmaster', duration:'15 min zone 2' },
+    ]
+  },
+  thursday: {
+    title: 'CORE + FUNCTIONAL', subtitle: 'Core · Stability · Conditioning', split: 'core',
+    warmup: [
+      { name:'Treadmill Walk', equipment:'Treadmill', duration:'5 min' },
+      { name:'Core Activation', equipment:'Bodyweight', duration:'2 min' },
+    ],
+    main: [
+      { name:'Pallof Press', equipment:'Cable', muscles:'Obliques, TVA', sets:3, reps:'12/side', rest:60, video:'https://www.youtube.com/watch?v=AH_QZLm_0-s', reel:'https://www.instagram.com/reel/DUkk2E_Ed0_/' },
+      { name:'Dead Bugs', equipment:'Mat', muscles:'Deep Core', sets:3, reps:'10/side', rest:45, video:'https://www.youtube.com/watch?v=I9x8KzS_jKw', reel:'https://www.instagram.com/reel/DTk3R0GDC4j/' },
+      { name:'Farmer Carries', equipment:'Dumbbells', muscles:'Core, Grip, Traps', sets:3, reps:'40m', rest:60, video:'https://www.youtube.com/watch?v=Fkzk_RqlYig', reel:'https://www.instagram.com/reel/DNiqAkMxPAP/' },
+      { name:'Ab Crunch Bench', equipment:'Bench', muscles:'Rectus Abdominis', sets:3, reps:'15', rest:45, video:'https://www.youtube.com/watch?v=5ER5Of4MOPI', reel:'https://www.instagram.com/reel/DVsyCYHiAAL/' },
+      { name:'Reverse Hyperextension', equipment:'Reverse Hyper', muscles:'Erectors, Glutes', sets:3, reps:'12', rest:60, video:'https://www.youtube.com/watch?v=ZeRsNzFcQLQ', reel:'https://www.instagram.com/reel/DSTJHp_kgrL/' },
+    ],
+    core: [],
+    stretches: [
+      { name:'Full Body Stretch', duration:'30s per group' },
+    ],
+    cardio: [
+      { name:'Stairmaster HIIT', duration:'20 min' },
+    ]
+  },
+  friday: {
+    title: 'UPPER DAY', subtitle: 'Chest · Back · Shoulders · Arms', split: 'upper',
+    warmup: [
+      { name:'Treadmill Walk', equipment:'Treadmill', duration:'5 min' },
+      { name:'Upper Body Stretches', equipment:'Bodyweight', duration:'2 min' },
+    ],
+    main: [
+      { name:'Super Horizontal Multi Press', equipment:'Panatta 1FW042', muscles:'Chest, Triceps', sets:3, reps:'8-10', rest:90, video:'https://www.youtube.com/watch?v=3aKDR395D6M', reel:'https://www.instagram.com/reel/DTneJ7nDkbo/' },
+      { name:'Super Rowing Machine Circular', equipment:'Panatta 1FW', muscles:'Mid Back, Lats', sets:3, reps:'10-12', rest:90, video:'https://www.youtube.com/watch?v=Jl0r78dnqGU', reel:'https://www.instagram.com/reel/C-zp39ev3sZ/' },
+      { name:'Inclined Chest Press', equipment:'Panatta 1FE032', muscles:'Upper Chest', sets:3, reps:'10-12', rest:60, video:'https://www.youtube.com/watch?v=Vvz1iys3IF8', reel:'' },
+      { name:'Lat Pulldown Standard', equipment:'Panatta 1FE001', muscles:'Lats, Biceps', sets:3, reps:'10-12', rest:60, video:'https://www.youtube.com/watch?v=WcJW7U0EKr0', reel:'' },
+      { name:'Cable Lateral Raises', equipment:'Dual Pulley', muscles:'Lateral Delts', sets:3, reps:'12-15', rest:60, video:'https://www.youtube.com/watch?v=3VcKaXpzqRo', reel:'' },
+      { name:'Alternate Curling Machine', equipment:'Panatta', muscles:'Biceps', sets:3, reps:'12-15', rest:60, video:'https://www.youtube.com/watch?v=-PuXPr_Zbm8', reel:'' },
+      { name:'French Press Machine', equipment:'Panatta', muscles:'Triceps', sets:3, reps:'12-15', rest:60, video:'https://www.youtube.com/watch?v=LNWMFPhKb-8', reel:'' },
+    ],
+    core: [
+      { name:'Dead Bugs', equipment:'Mat', duration:'3 × 10/side' },
+    ],
+    stretches: [
+      { name:'Chest Stretch', duration:'30s each side' },
+      { name:'Lat Stretch', duration:'30s each side' },
+      { name:'Tricep Stretch', duration:'30s each' },
+    ],
+    cardio: [
+      { name:'Stairmaster', duration:'15 min zone 2' },
+    ]
+  },
+  saturday: {
+    title: 'LOWER DAY', subtitle: 'Quads · Glutes · Hamstrings · Calves', split: 'legs',
+    warmup: [
+      { name:'Static Cycle', equipment:'Cycle', duration:'5 min' },
+      { name:'Bodyweight Squats + Glute Bridges', equipment:'Bodyweight', duration:'2 min' },
+    ],
+    main: [
+      { name:'Super Power Squat', equipment:'Panatta 1FW084', muscles:'Quads, Glutes, Core', sets:4, reps:'8-10', rest:90, video:'https://www.youtube.com/watch?v=JQfkkB4LHHA', reel:'' },
+      { name:'Booty Builder Hip Thrust', equipment:'Booty Builder', muscles:'Glutes', sets:3, reps:'10-12', rest:90, video:'https://www.youtube.com/watch?v=SEdqd1n0cvg', reel:'' },
+      { name:'Back Extension (straight legs)', equipment:'Booty Builder', muscles:'Hamstrings', sets:3, reps:'10-12', rest:90, video:'', reel:'' },
+      { name:'Super Vertical Leg Press', equipment:'Panatta 1FW093', muscles:'Quads', sets:3, reps:'12-15', rest:90, video:'https://www.youtube.com/watch?v=FjzEGJxD9Sw', reel:'' },
+      { name:'Standing Glute Kickback', equipment:'Booty Builder', muscles:'Glutes', sets:2, reps:'12-15/leg', rest:60, video:'', reel:'' },
+      { name:'Donkey Calf + Seated Calf', equipment:'Panatta', muscles:'Calves', sets:2, reps:'15 each (superset)', rest:60, video:'', reel:'' },
+    ],
+    core: [
+      { name:'Farmer Carries', equipment:'Dumbbells', duration:'3 × 30s' },
+    ],
+    stretches: [
+      { name:'Quad Stretch', duration:'30s each' },
+      { name:'Hamstring Stretch', duration:'30s each' },
+      { name:'Hip Flexor Stretch', duration:'30s each side' },
+    ],
+    cardio: [
+      { name:'Static Cycle', duration:'10-15 min zone 2' },
+    ]
+  },
+  sunday: null
+};
+
+// ═══ TIMER ═══
+let timerInterval = null;
+let timerSeconds = 0;
+
+function startTimer(seconds, exerciseName) {
+  timerSeconds = seconds;
+  const display = document.getElementById('timerDisplay');
+  const overlay = document.getElementById('timerOverlay');
+  const exName = document.getElementById('timerExercise');
+
+  display.textContent = seconds;
+  display.classList.remove('go');
+  exName.textContent = exerciseName || '';
+  overlay.classList.add('active');
+
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    if (timerSeconds <= 0) {
+      clearInterval(timerInterval);
+      display.textContent = 'GO';
+      display.classList.add('go');
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+    } else {
+      display.textContent = timerSeconds;
+    }
+  }, 1000);
+}
+
+function cancelTimer() {
+  clearInterval(timerInterval);
+  document.getElementById('timerOverlay').classList.remove('active');
+}
+
+function dismissTimer(e) {
+  if (e.target === document.getElementById('timerOverlay')) cancelTimer();
+}
+
+// ═══ TOAST ═══
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ═══ MENU ═══
+function toggleMenu() {
+  document.getElementById('chapterMenu').classList.toggle('open');
+  document.getElementById('menuOverlay').classList.toggle('open');
+}
+
+// ═══ WARMUP TOGGLE ═══
+function toggleWarmup() {
+  const btn = document.getElementById('warmupToggle');
+  const content = document.getElementById('warmupContent');
+  btn.classList.toggle('open');
+  content.classList.toggle('show');
+  btn.querySelector('span:first-child').textContent =
+    content.classList.contains('show') ? '▾ Warm-up' : '▸ Warm-up';
+}
+document.getElementById('warmupToggle')?.addEventListener('click', toggleWarmup);
+
+// ═══ FORMAT REST TIME ═══
+function fmtRest(s) {
+  if (s >= 60) return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
+  return s + 's';
+}
+
+// ═══ RENDER ═══
+function render() {
+  const program = PROGRAMS[today];
+  const greeting = document.getElementById('greetingText');
+  const sub = document.getElementById('greetingSub');
+  const title = document.getElementById('splitTitle');
+  const subtitle = document.getElementById('splitSubtitle');
+  const entries = document.getElementById('entries');
+  const warmup = document.getElementById('warmupContent');
+  const quote = document.getElementById('quote');
+
+  // Greeting
+  const hour = new Date().getHours();
+  const timeOfDay = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
+  greeting.textContent = timeOfDay + ', Luffy.';
+
+  const dayStart = new Date(2026, 2, 29); // Mar 29 2026
+  const dayCount = Math.floor((new Date() - dayStart) / 86400000);
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  sub.textContent = 'Day ' + dayCount + ' · ' + dayNames[new Date().getDay()];
+
+  // Sunday rest
+  if (!program) {
+    title.textContent = 'REST DAY';
+    subtitle.textContent = 'Recovery is when you grow.';
+    document.getElementById('warmupSection').style.display = 'none';
+    entries.innerHTML = '<div style="text-align:center;padding:60px 0;color:var(--ink-ghost);font-size:3rem;">🌊</div>';
+    quote.innerHTML = '<p class="quote-text">"' + QUOTES.sunday + '"</p><p class="quote-attr">— RAYLEIGH</p>';
+    return;
+  }
+
+  // Title
+  title.textContent = program.title;
+  title.style.color = 'var(--' + program.split + ')';
+  subtitle.textContent = program.subtitle;
+
+  // Warmup
+  if (program.warmup && program.warmup.length) {
+    warmup.innerHTML = program.warmup.map(w => {
+      let links = '';
+      if (w.video) links += '<a href="' + w.video + '" target="_blank">Form</a>';
+      return '<div class="warmup-item"><span>' + w.name + ' · ' + (w.duration || '') + '</span><span class="warmup-links">' + links + '</span></div>';
+    }).join('');
+  }
+
+  // Main exercises
+  let html = '';
+  html += '<div class="section-rule" data-phase="main"><span>MAIN WORK</span></div>';
+
+  program.main.forEach((ex, i) => {
+    const num = String(i + 1).padStart(2, '0');
+    const delay = (i * 0.04) + 's';
+    html += '<div class="entry" style="animation-delay:' + delay + '">';
+    html += '<div class="entry-num" style="color:var(--' + program.split + ')">' + num + '</div>';
+    html += '<div class="entry-name">' + ex.name + '</div>';
+    html += '<div class="entry-machine">' + ex.equipment + '</div>';
+    html += '<div class="entry-baseline" id="bl-' + i + '" style="display:none"></div>';
+    html += '<div class="entry-prescription">';
+    html += '<span class="entry-setsreps">' + ex.sets + '<span class="sep">×</span>' + ex.reps + '</span>';
+    if (ex.rest) {
+      html += '<button class="entry-rest" onclick="startTimer(' + ex.rest + ',\'' + ex.name.replace(/'/g, "\\'") + '\')">';
+      html += '⏱ ' + fmtRest(ex.rest) + '</button>';
+    }
+    html += '</div>';
+    html += '<div class="entry-actions">';
+    if (ex.video) html += '<a href="' + ex.video + '" target="_blank">Form</a>';
+    if (ex.reel) html += '<a href="' + ex.reel + '" target="_blank" class="action-reel">Reel</a>';
+    html += '<button class="action-log" onclick="logExercise(\'' + ex.name.replace(/'/g, "\\'") + '\')">Log</button>';
+    html += '</div>';
+    html += '</div>';
+    if (i < program.main.length - 1) html += '<hr class="entry-sep">';
+  });
+
+  // Core
+  if (program.core && program.core.length) {
+    html += '<div class="section-rule" data-phase="core"><span>CORE</span></div>';
+    program.core.forEach(ex => {
+      html += '<div class="entry"><div class="entry-name">' + ex.name + '</div>';
+      html += '<div class="entry-machine">' + (ex.equipment || '') + ' · ' + (ex.duration || '') + '</div>';
+      if (ex.video) html += '<div class="entry-actions"><a href="' + ex.video + '" target="_blank">Form</a></div>';
+      html += '</div>';
+    });
+  }
+
+  // Stretches
+  if (program.stretches && program.stretches.length) {
+    html += '<div class="section-rule" data-phase="stretch"><span>STRETCHES</span></div>';
+    program.stretches.forEach(ex => {
+      html += '<div class="warmup-item"><span>' + ex.name + '</span><span class="data-sm ghost">' + (ex.duration || '') + '</span></div>';
+    });
+  }
+
+  // Cardio
+  if (program.cardio && program.cardio.length) {
+    html += '<div class="section-rule" data-phase="cardio"><span>CARDIO</span></div>';
+    program.cardio.forEach(ex => {
+      html += '<div class="entry"><div class="entry-name">' + ex.name + '</div>';
+      html += '<div class="entry-machine">' + (ex.duration || '') + '</div>';
+      if (ex.video) html += '<div class="entry-actions"><a href="' + ex.video + '" target="_blank">Form</a></div>';
+      html += '</div>';
+    });
+  }
+
+  entries.innerHTML = html;
+
+  // Quote
+  const q = QUOTES[today] || QUOTES.monday;
+  quote.innerHTML = '<p class="quote-text">"' + q + '"</p><p class="quote-attr">— RAYLEIGH</p>';
+
+  // Load baselines
+  loadBaselines();
+}
+
+// ═══ LOG TO SIGNAL ═══
+function logExercise(name) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(name).then(() => {
+      showToast('Copied: ' + name);
+      setTimeout(() => window.open(SIGNAL_URL, '_blank'), 300);
+    });
+  } else {
+    window.open(SIGNAL_URL, '_blank');
+  }
+}
+
+// ═══ BASELINES ═══
+async function loadBaselines() {
+  try {
+    const resp = await fetch('https://cobydata2026.blob.core.windows.net/dashboard/baselines.json?' + Date.now());
+    const data = await resp.json();
+    const dayData = data[today];
+    if (!dayData || !dayData.exercises) return;
+
+    const program = PROGRAMS[today];
+    if (!program) return;
+
+    program.main.forEach((ex, i) => {
+      const bl = dayData.exercises[ex.name];
+      if (bl && bl.topSet) {
+        const el = document.getElementById('bl-' + i);
+        if (el) {
+          el.textContent = bl.topSet;
+          if (bl.note) el.textContent += ' · ' + bl.note;
+          el.style.display = 'block';
+        }
+      }
+    });
+  } catch (e) {
+    // Baselines are optional
+  }
+}
+
+// ═══ SESSION POLLING ═══
+async function pollSession() {
+  try {
+    const resp = await fetch('https://cobydata2026.blob.core.windows.net/dashboard/session-state.json?' + Date.now());
+    const session = await resp.json();
+    if (session.status !== 'active' && session.status !== 'completed') {
+      document.getElementById('sessionBar').classList.add('hidden');
+      return;
+    }
+    if (session.day !== today) return;
+
+    const bar = document.getElementById('sessionBar');
+    const fill = document.getElementById('sessionFill');
+    const stats = document.getElementById('sessionStats');
+
+    bar.classList.remove('hidden');
+    const pct = session.stats ? Math.round((session.stats.setsCompleted / session.stats.setsTotal) * 100) : 0;
+    fill.style.width = pct + '%';
+    if (session.stats) {
+      stats.textContent = session.stats.setsCompleted + '/' + session.stats.setsTotal + ' sets · ' + (session.stats.elapsedMinutes || 0) + ' min';
+    }
+
+    // Mark done exercises
+    if (session.exercises) {
+      const entries = document.querySelectorAll('.entry');
+      session.exercises.forEach(se => {
+        if (se.status === 'done' && se.phase === 'main') {
+          // Find matching entry by name
+          entries.forEach(entry => {
+            const nameEl = entry.querySelector('.entry-name');
+            if (nameEl && nameEl.textContent === se.name) {
+              entry.classList.add('is-done');
+            }
+          });
+        }
+      });
+    }
+  } catch (e) {
+    // Session polling is optional
+  }
+}
+
+// ═══ INIT ═══
+render();
+setInterval(pollSession, 15000);
+pollSession();
+</script>
+
+</body>
+</html>
